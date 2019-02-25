@@ -125,9 +125,14 @@ public final class Client {
   public static final String INSERT_COUNT_PROPERTY = "insertcount";
 
   /**
-   * Target number of operations per second.
+   * Initial target number of operations per second.
    */
   public static final String TARGET_PROPERTY = "target";
+
+  /**
+   * Final target number of operations per second.
+   */
+  public static final String TARGET2_PROPERTY = "target2";
 
   /**
    * The maximum amount of time (in seconds) for which the benchmark will be run.
@@ -286,12 +291,18 @@ public final class Client {
     int threadcount = Integer.parseInt(props.getProperty(THREAD_COUNT_PROPERTY, "1"));
     String dbname = props.getProperty(DB_PROPERTY, "com.yahoo.ycsb.BasicDB");
     int target = Integer.parseInt(props.getProperty(TARGET_PROPERTY, "0"));
+    int target2 = Integer.parseInt(props.getProperty(TARGET2_PROPERTY, "0"));
 
     //compute the target throughput
     double targetperthreadperms = -1;
+    double targetperthreadperms2 = -1;
     if (target > 0) {
       double targetperthread = ((double) target) / ((double) threadcount);
       targetperthreadperms = targetperthread / 1000.0;
+    }
+    if (target2 > 0) {
+        double targetperthread2 = ((double) target2) / ((double) threadcount);
+        targetperthreadperms2 = targetperthread2 / 1000.0;
     }
 
     Thread warningthread = setupWarningThread();
@@ -308,7 +319,7 @@ public final class Client {
     System.err.println("Starting test.");
     final CountDownLatch completeLatch = new CountDownLatch(threadcount);
 
-    final List<ClientThread> clients = initDb(dbname, props, threadcount, targetperthreadperms,
+    final List<ClientThread> clients = initDb(dbname, props, threadcount, targetperthreadperms, targetperthreadperms2,
         workload, tracer, completeLatch);
 
     if (status) {
@@ -401,8 +412,8 @@ public final class Client {
   }
 
   private static List<ClientThread> initDb(String dbname, Properties props, int threadcount,
-                                           double targetperthreadperms, Workload workload, Tracer tracer,
-                                           CountDownLatch completeLatch) {
+                                           double targetperthreadperms, double targetperthreadperms2, 
+                                           Workload workload, Tracer tracer, CountDownLatch completeLatch) {
     boolean initFailed = false;
     boolean dotransactions = Boolean.valueOf(props.getProperty(DO_TRANSACTIONS_PROPERTY, String.valueOf(true)));
 
@@ -437,7 +448,7 @@ public final class Client {
         }
 
         ClientThread t = new ClientThread(db, dotransactions, workload, props, threadopcount, targetperthreadperms,
-            completeLatch);
+            targetperthreadperms2, completeLatch);
         t.setThreadId(threadid);
         t.setThreadCount(threadcount);
         clients.add(t);

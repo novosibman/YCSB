@@ -19,6 +19,7 @@ public class ClientThread implements Runnable {
   private Workload workload;
   private int opcount;
   private double targetOpsPerMs;
+  private double targetOpsPerMs2;
 
   private int opsdone;
   private int threadid;
@@ -40,7 +41,7 @@ public class ClientThread implements Runnable {
    * @param completeLatch        The latch tracking the completion of all clients.
    */
   public ClientThread(DB db, boolean dotransactions, Workload workload, Properties props, int opcount,
-                      double targetperthreadperms, CountDownLatch completeLatch) {
+              double targetperthreadperms, double targetperthreadperms2, CountDownLatch completeLatch) {
     this.db = db;
     this.dotransactions = dotransactions;
     this.workload = workload;
@@ -49,6 +50,9 @@ public class ClientThread implements Runnable {
     if (targetperthreadperms > 0) {
       targetOpsPerMs = targetperthreadperms;
       targetOpsTickNs = (long) (1000000 / targetOpsPerMs);
+    }
+    if (targetperthreadperms2 > 0) {
+        
     }
     this.props = props;
     measurements = Measurements.getMeasurements();
