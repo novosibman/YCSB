@@ -130,9 +130,9 @@ public final class Client {
   public static final String TARGET_PROPERTY = "target";
 
   /**
-   * Final target number of operations per second.
+   * Target number different per second.
    */
-  public static final String TARGET2_PROPERTY = "target2";
+  public static final String TARGET_DIFF_PROPERTY = "targetdiff";
 
   /**
    * The maximum amount of time (in seconds) for which the benchmark will be run.
@@ -291,19 +291,17 @@ public final class Client {
     int threadcount = Integer.parseInt(props.getProperty(THREAD_COUNT_PROPERTY, "1"));
     String dbname = props.getProperty(DB_PROPERTY, "com.yahoo.ycsb.BasicDB");
     int target = Integer.parseInt(props.getProperty(TARGET_PROPERTY, "0"));
-    int target2 = Integer.parseInt(props.getProperty(TARGET2_PROPERTY, "0"));
+    int targetDiff = Integer.parseInt(props.getProperty(TARGET_DIFF_PROPERTY, "0"));
 
     //compute the target throughput
     double targetperthreadperms = -1;
-    double targetperthreadperms2 = -1;
+    double targetperthreadpermsDiff = 0;
     if (target > 0) {
       double targetperthread = ((double) target) / ((double) threadcount);
       targetperthreadperms = targetperthread / 1000.0;
     }
-    if (target2 > 0) {
-        double targetperthread2 = ((double) target2) / ((double) threadcount);
-        targetperthreadperms2 = targetperthread2 / 1000.0;
-    }
+    double targetperthreadDiff = ((double) targetDiff) / ((double) threadcount);
+    targetperthreadpermsDiff = targetperthreadDiff / 1000.0;
 
     Thread warningthread = setupWarningThread();
     warningthread.start();
@@ -319,7 +317,7 @@ public final class Client {
     System.err.println("Starting test.");
     final CountDownLatch completeLatch = new CountDownLatch(threadcount);
 
-    final List<ClientThread> clients = initDb(dbname, props, threadcount, targetperthreadperms, targetperthreadperms2,
+    final List<ClientThread> clients = initDb(dbname, props, threadcount, targetperthreadperms, targetperthreadpermsDiff,
         workload, tracer, completeLatch);
 
     if (status) {

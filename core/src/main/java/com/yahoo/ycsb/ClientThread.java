@@ -19,9 +19,10 @@ public class ClientThread implements Runnable {
   private Workload workload;
   private int opcount;
   private double targetOpsPerMs;
-  private double targetOpsPerMs2;
+  private double targetOpsPerMsDela;
 
   private int opsdone;
+  private long intendedTimeNs;
   private int threadid;
   private int threadcount;
   private Object workloadstate;
@@ -38,21 +39,21 @@ public class ClientThread implements Runnable {
    * @param props                the properties defining the experiment
    * @param opcount              the number of operations (transactions or inserts) to do
    * @param targetperthreadperms target number of operations per thread per ms
+   * @param targetperthreadpermsDelta target throughput different per thread
    * @param completeLatch        The latch tracking the completion of all clients.
    */
   public ClientThread(DB db, boolean dotransactions, Workload workload, Properties props, int opcount,
-              double targetperthreadperms, double targetperthreadperms2, CountDownLatch completeLatch) {
+              double targetperthreadperms, double targetperthreadpermsDelta, CountDownLatch completeLatch) {
     this.db = db;
     this.dotransactions = dotransactions;
     this.workload = workload;
     this.opcount = opcount;
     opsdone = 0;
+    intendedTimeNs = 0;
     if (targetperthreadperms > 0) {
       targetOpsPerMs = targetperthreadperms;
       targetOpsTickNs = (long) (1000000 / targetOpsPerMs);
-    }
-    if (targetperthreadperms2 > 0) {
-        
+      targetOpsPerMsDela = targetperthreadpermsDelta;
     }
     this.props = props;
     measurements = Measurements.getMeasurements();
@@ -70,6 +71,14 @@ public class ClientThread implements Runnable {
 
   public int getOpsDone() {
     return opsdone;
+  }
+
+  public void opDone() {
+    opsdone++;
+    if (targetOpsPerMs > 0) {
+        intendedTimeNs += 1000000L / targetOpsPerMs;
+        targetOpsPerMs += targetOpsPerMsDela;
+    }
   }
 
   @Override
@@ -110,7 +119,7 @@ public class ClientThread implements Runnable {
             break;
           }
 
-          opsdone++;
+          opDone();
 
           throttleNanos(startTimeNanos);
         }
@@ -123,7 +132,7 @@ public class ClientThread implements Runnable {
             break;
           }
 
-          opsdone++;
+          opDone();
 
           throttleNanos(startTimeNanos);
         }
@@ -157,7 +166,8 @@ public class ClientThread implements Runnable {
     //throttle the operations
     if (targetOpsPerMs > 0) {
       // delay until next tick
-      long deadline = startTimeNanos + opsdone * targetOpsTickNs;
+      //long deadline = startTimeNanos + opsdone * targetOpsTickNs;
+      long deadline = startTimeNanos + intendedTimeNs;
       sleepUntil(deadline);
       measurements.setIntendedStartTimeNs(deadline);
     }
