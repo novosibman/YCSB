@@ -317,8 +317,8 @@ public final class Client {
     System.err.println("Starting test.");
     final CountDownLatch completeLatch = new CountDownLatch(threadcount);
 
-    final List<ClientThread> clients = initDb(dbname, props, threadcount, targetperthreadperms, targetperthreadpermsDiff,
-        workload, tracer, completeLatch);
+    final List<ClientThread> clients = initDb(dbname, props, threadcount, targetperthreadperms,
+            targetperthreadpermsDiff, workload, tracer, completeLatch);
 
     if (status) {
       boolean standardstatus = false;

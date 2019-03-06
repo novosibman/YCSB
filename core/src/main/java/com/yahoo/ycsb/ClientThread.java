@@ -76,8 +76,8 @@ public class ClientThread implements Runnable {
   public void opDone() {
     opsdone++;
     if (targetOpsPerMs > 0) {
-        intendedTimeNs += 1000000L / targetOpsPerMs;
-        targetOpsPerMs += targetOpsPerMsDela;
+      intendedTimeNs += 1000000L / targetOpsPerMs;
+      targetOpsPerMs += targetOpsPerMsDela;
     }
   }
 
